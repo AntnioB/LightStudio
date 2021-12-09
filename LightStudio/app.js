@@ -67,8 +67,9 @@ function setup(shaders)
 
     const eye=cameraGui.addFolder("eye");
 
-    cameraGui.add(eye,"x").min(0).max(20).step(1).listen();
-
+    cameraGui.add(camera.eye,"x").min(0).max(20).step(1).listen();
+    cameraGui.add(camera.eye,"y").min(0).max(20).step(1).listen();
+    cameraGui.add(camera.eye,"z").min(0).max(20).step(1).listen();
     gl.clearColor(0.05, 0.05, 0.05, 1.0);
     CUBE.init(gl);
     gl.enable(gl.DEPTH_TEST);   // Enables Z-buffer depth test
