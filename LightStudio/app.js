@@ -38,7 +38,9 @@ let camera ={
 
 let options={
     wireframe: false,
-    normals: true
+    normals: true,
+    zBuffer:true,
+    backFaceCulling:true
 };
 
 function setup(shaders)
@@ -64,7 +66,17 @@ function setup(shaders)
         if(v) mode=gl.LINES;
         else mode=gl.TRIANGLES;
     });
-    optionsGui.add(options, "normals");
+    optionsGui.add(options, "normals").onChange(function(v){
+        //TODO
+    });
+    optionsGui.add(options,"zBuffer").onChange(function(v){
+        if(v) gl.enable(gl.DEPTH_TEST);
+        else gl.disable(gl.DEPTH_TEST);
+    })
+    optionsGui.add(options,"backFaceCulling").onChange(function(v){
+        if(v) gl.enable(gl.CULL_FACE);
+        else gl.disable(gl.CULL_FACE);
+    })
 
     
 
