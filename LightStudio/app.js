@@ -1,8 +1,8 @@
-import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
+    import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
 import { ortho, lookAt, flatten } from "../../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale, multTranslation, popMatrix, pushMatrix} from "../../libs/stack.js";
-
-import * as SPHERE from '../../libs/sphere.js';
+import * as dat from "../../libs/dat.gui.module.js";
+import * as CUBE from '../../libs/cube.js';
 
 /** @type WebGLRenderingContext */
 let gl;
@@ -12,35 +12,7 @@ let speed = 1/60.0;     // Speed (how many days added to time on each render pas
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 let animation = true;   // Animation is running
 
-const PLANET_SCALE = 10;    // scale that will apply to each planet and satellite
-const ORBIT_SCALE = 1/60;   // scale that will apply to each orbit around the sun
-
-const SUN_DIAMETER = 1391900;
-const SUN_DAY = 24.47; // At the equator. The poles are slower as the sun is gaseous
-
-const MERCURY_DIAMETER = 4866*PLANET_SCALE;
-const MERCURY_ORBIT = 57950000*ORBIT_SCALE;
-const MERCURY_YEAR = 87.97;
-const MERCURY_DAY = 58.646;
-
-const VENUS_DIAMETER = 12106*PLANET_SCALE;
-const VENUS_ORBIT = 108110000*ORBIT_SCALE;
-const VENUS_YEAR = 224.70;
-const VENUS_DAY = 243.018;
-
-const EARTH_DIAMETER = 12742*PLANET_SCALE;
-const EARTH_ORBIT = 149570000*ORBIT_SCALE;
-const EARTH_YEAR = 365.26;
-const EARTH_DAY = 0.99726968;
-
-const MOON_DIAMETER = 3474*PLANET_SCALE;
-const MOON_ORBIT = 363396*ORBIT_SCALE*60;
-const MOON_YEAR = 28;
-const MOON_DAY = 0;
-
-const VP_DISTANCE = EARTH_ORBIT;
-
-
+const VP_DISTANCE = 5;
 
 function setup(shaders)
 {
@@ -58,29 +30,49 @@ function setup(shaders)
     resize_canvas();
     window.addEventListener("resize", resize_canvas);
 
-    document.onkeydown = function(event) {
-        switch(event.key) {
-            case 'w':
-                mode = gl.LINES; 
-                break;
-            case 's':
-                mode = gl.TRIANGLES;
-                break;
-            case 'p':
-                animation = !animation;
-                break;
-            case '+':
-                if(animation) speed *= 1.1;
-                break;
-            case '-':
-                if(animation) speed /= 1.1;
-                break;
-        }
-    }
+    let camera ={
+        eye:{
+            x:5,
+            y:0,
+            z:0,
+        },
+        at:{
+            0:0,
+            1:1,
+            2:0,
+        },
+        fovy:45,
+        aspect:1,
+        near:0.1,
+        far:20
+    };
+    
+    let options={
+        wireframe: false,
+        normals: true
+    };
+    
+    const gui = new dat.GUI();
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    SPHERE.init(gl);
+    const cameraGui= gui.addFolder("camera");
+
+    cameraGui.add(camera,"fovy").min(1).max(100).step(1).listen();
+    cameraGui.add(camera,"aspect").min(0).max(10).step(1).listen().domElement.style.pointerEvents="none";
+    cameraGui.add(camera,"near").min(0.1).max(20).listen().onChange(function(v){
+        camera.near=Math.min(camera.far-0.5,v);
+    });
+    cameraGui.add(camera,"far").min(0.1).max(20).listen().onChange(function(v){
+        camera.far=Math.min(camera.far-0.5,v);
+    })
+
+    const eye=cameraGui.addFolder("eye");
+
+    cameraGui.add(eye,"x").min(0).max(20).step(1).listen();
+
+    gl.clearColor(0.05, 0.05, 0.05, 1.0);
+    CUBE.init(gl);
     gl.enable(gl.DEPTH_TEST);   // Enables Z-buffer depth test
+    gl.enable(gl.CULL_FACE);    //Enables Back-face Culling
     
     window.requestAnimationFrame(render);
 
@@ -104,73 +96,14 @@ function setup(shaders)
     function Sun()
     {
         // Don't forget to scale the sun, rotate it around the y axis at the correct speed
-        multScale([SUN_DIAMETER, SUN_DIAMETER, SUN_DIAMETER]);
-        multRotationY(360*time/SUN_DAY);
+        multScale([3, 0.1, 3]);
+        multTranslation([0,-0.05,0]);
 
         // Send the current modelview matrix to the vertex shader
         uploadModelView();
 
         // Draw a sphere representing the sun
-        SPHERE.draw(gl, program, mode);
-    }
-
-    function Mercury()
-    {
-        multScale([MERCURY_DIAMETER, MERCURY_DIAMETER, MERCURY_DIAMETER]);
-        multRotationY(360*time/MERCURY_DAY);
-
-        // Send the current modelview matrix to the vertex shader
-        uploadModelView();
-
-        // Draw a sphere 
-        SPHERE.draw(gl, program, mode);
-    }
-
-    function Venus()
-    {
-        multScale([VENUS_DIAMETER, VENUS_DIAMETER, VENUS_DIAMETER]);
-        multRotationY(360*time/VENUS_DAY);
-
-        // Send the current modelview matrix to the vertex shader
-        uploadModelView();
-
-        // Draw a sphere 
-        SPHERE.draw(gl, program, mode);
-    }
-
-    function Earth()
-    {
-        multRotationY(360*time/EARTH_DAY);
-        multScale([EARTH_DIAMETER, EARTH_DIAMETER, EARTH_DIAMETER]);
-
-        // Send the current modelview matrix to the vertex shader
-        uploadModelView();
-
-        // Draw a sphere 
-        SPHERE.draw(gl, program, mode);
-    }
-
-    function Moon()
-    {
-        multScale([MOON_DIAMETER, MOON_DIAMETER, MOON_DIAMETER])
-
-        // Send the current modelview matrix to the vertex shader
-        uploadModelView();
-
-        // Draw a sphere 
-        SPHERE.draw(gl, program, mode);
-    }
-
-    function EarthAndMoon() 
-    {
-        pushMatrix();
-        Earth();
-        popMatrix();
-        pushMatrix();
-            multRotationY(360*time/MOON_YEAR);
-            multTranslation([MOON_ORBIT, 0, 0]);
-            Moon();
-        popMatrix();
+        CUBE.draw(gl, program, mode);
     }
 
     function render()
@@ -188,21 +121,6 @@ function setup(shaders)
         
         pushMatrix();
             Sun();
-        popMatrix();
-        pushMatrix();
-            multRotationY(360*time/MERCURY_YEAR);
-            multTranslation([MERCURY_ORBIT, 0, 0]);
-            Mercury();
-        popMatrix();
-        pushMatrix();
-            multRotationY(360*time/VENUS_YEAR);
-            multTranslation([VENUS_ORBIT, 0, 0]);
-            Venus();
-        popMatrix();
-        pushMatrix();
-            multRotationY(360*time/EARTH_YEAR);
-            multTranslation([EARTH_ORBIT, 0, 0]);
-            EarthAndMoon();
         popMatrix();
     }
 }
