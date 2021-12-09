@@ -37,9 +37,14 @@ function setup(shaders)
             z:0,
         },
         at:{
-            0:0,
-            1:1,
-            2:0,
+            x:0,
+            y:1,
+            z:0,
+        },
+        up:{
+            x:0,
+            y:1,
+            z:0,
         },
         fovy:45,
         aspect:1,
@@ -65,11 +70,21 @@ function setup(shaders)
         camera.far=Math.min(camera.far-0.5,v);
     })
 
-    const eye=cameraGui.addFolder("eye");
+    const eyeGui=cameraGui.addFolder("eye");
+    eyeGui.add(camera.eye,"x").min(0).max(20).listen();
+    eyeGui.add(camera.eye,"y").min(0).max(20).listen();
+    eyeGui.add(camera.eye,"z").min(0).max(20).listen();
 
-    cameraGui.add(camera.eye,"x").min(0).max(20).step(1).listen();
-    cameraGui.add(camera.eye,"y").min(0).max(20).step(1).listen();
-    cameraGui.add(camera.eye,"z").min(0).max(20).step(1).listen();
+    const atGui=cameraGui.addFolder("at");
+    atGui.add(camera.at,"x").min(0).max(20).listen();
+    atGui.add(camera.at,"y").min(0).max(20).listen();
+    atGui.add(camera.at,"z").min(0).max(20).listen();
+
+    const upGui=cameraGui.addFolder("up");
+    upGui.add(camera.up,"x").min(0).max(20).listen();
+    upGui.add(camera.up,"y").min(0).max(20).listen();
+    upGui.add(camera.up,"z").min(0).max(20).listen();
+
     gl.clearColor(0.05, 0.05, 0.05, 1.0);
     CUBE.init(gl);
     gl.enable(gl.DEPTH_TEST);   // Enables Z-buffer depth test
