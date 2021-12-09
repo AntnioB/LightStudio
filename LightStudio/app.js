@@ -14,6 +14,33 @@ let animation = true;   // Animation is running
 
 const VP_DISTANCE = 5;
 
+let camera ={
+    eye:{
+        x:5,
+        y:0,
+        z:0,
+    },
+    at:{
+        x:0,
+        y:1,
+        z:0,
+    },
+    up:{
+        x:0,
+        y:1,
+        z:0,
+    },
+    fovy:45,
+    aspect:1,
+    near:0.1,
+    far:20
+};
+
+let options={
+    wireframe: false,
+    normals: true
+};
+
 function setup(shaders)
 {
     let canvas = document.getElementById("gl-canvas");
@@ -21,46 +48,27 @@ function setup(shaders)
 
     gl = setupWebGL(canvas);
 
+    mode=gl.TRIANGLES;
+
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
 
     let mProjection = ortho(-VP_DISTANCE*aspect,VP_DISTANCE*aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
 
-    mode = gl.LINES; 
-
     resize_canvas();
     window.addEventListener("resize", resize_canvas);
-
-    let camera ={
-        eye:{
-            x:5,
-            y:0,
-            z:0,
-        },
-        at:{
-            x:0,
-            y:1,
-            z:0,
-        },
-        up:{
-            x:0,
-            y:1,
-            z:0,
-        },
-        fovy:45,
-        aspect:1,
-        near:0.1,
-        far:20
-    };
-    
-    let options={
-        wireframe: false,
-        normals: true
-    };
     
     const gui = new dat.GUI();
 
-    const cameraGui= gui.addFolder("camera");
+    const optionsGui = gui.addFolder("options");
+    optionsGui.add(options,"wireframe").onChange(function(v){
+        if(v) mode=gl.LINES;
+        else mode=gl.TRIANGLES;
+    });
+    optionsGui.add(options, "normals");
 
+    
+
+    const cameraGui= gui.addFolder("camera");
     cameraGui.add(camera,"fovy").min(1).max(100).step(1).listen();
     cameraGui.add(camera,"aspect").min(0).max(10).step(1).listen().domElement.style.pointerEvents="none";
     cameraGui.add(camera,"near").min(0.1).max(20).listen().onChange(function(v){
@@ -98,10 +106,10 @@ function setup(shaders)
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        aspect = canvas.width / canvas.height;
+        camera.aspect = canvas.width / canvas.height;
 
         gl.viewport(0,0,canvas.width, canvas.height);
-        mProjection = ortho(-VP_DISTANCE*aspect,VP_DISTANCE*aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
+        mProjection = ortho(-VP_DISTANCE*camera.aspect,VP_DISTANCE*camera.aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
     }
 
     function uploadModelView()
@@ -133,7 +141,7 @@ function setup(shaders)
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
     
-        loadMatrix(lookAt([0,VP_DISTANCE,VP_DISTANCE], [0,0,0], [0,1,0]));
+        loadMatrix(lookAt([camera.eye.x,camera.eye.y,camera.eye.z], [camera.at.x,camera.at.y,camera.at.z], [camera.up.x,camera.up.y,camera.up.z]));
         
         pushMatrix();
             Sun();
