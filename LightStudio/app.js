@@ -1,8 +1,9 @@
     import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
-import { ortho, lookAt, flatten } from "../../libs/MV.js";
+import { ortho, lookAt, flatten,perspective } from "../../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale, multTranslation, popMatrix, pushMatrix} from "../../libs/stack.js";
 import * as dat from "../../libs/dat.gui.module.js";
 import * as CUBE from '../../libs/cube.js';
+import * as TORUS from '../../libs/torus.js';
 
 /** @type WebGLRenderingContext */
 let gl;
@@ -11,18 +12,19 @@ let time = 0;           // Global simulation time in days
 let speed = 1/60.0;     // Speed (how many days added to time on each render pass
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 let animation = true;   // Animation is running
+let artefact=TORUS;
 
 const VP_DISTANCE = 5;
 
 let camera ={
     eye:{
         x:5,
-        y:0,
-        z:0,
+        y:2,
+        z:4,
     },
     at:{
         x:0,
-        y:1,
+        y:0,
         z:0,
     },
     up:{
@@ -54,7 +56,7 @@ function setup(shaders)
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
 
-    let mProjection = ortho(-VP_DISTANCE*aspect,VP_DISTANCE*aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
+    let mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);//ortho(-VP_DISTANCE*aspect,VP_DISTANCE*aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
 
     resize_canvas();
     window.addEventListener("resize", resize_canvas);
@@ -66,8 +68,12 @@ function setup(shaders)
         if(v) mode=gl.LINES;
         else mode=gl.TRIANGLES;
     });
+    const normalsLocation= gl.getUniformLocation(program,"normals");
+    gl.uniform1f(normalsLocation,1.0);
     optionsGui.add(options, "normals").onChange(function(v){
-        //TODO
+        if(v)
+            gl.uniform1f(normalsLocation,1.0);
+        else gl.uniform1f(normalsLocation,0.0);
     });
     optionsGui.add(options,"zBuffer").onChange(function(v){
         if(v) gl.enable(gl.DEPTH_TEST);
@@ -81,13 +87,17 @@ function setup(shaders)
     
 
     const cameraGui= gui.addFolder("camera");
-    cameraGui.add(camera,"fovy").min(1).max(100).step(1).listen();
+    cameraGui.add(camera,"fovy").min(1).max(100).step(1).listen().onChange(function (v){
+        mProjection= perspective(camera.fovy,camera.aspect,camera.near,camera.far);
+    });
     cameraGui.add(camera,"aspect").min(0).max(10).step(1).listen().domElement.style.pointerEvents="none";
     cameraGui.add(camera,"near").min(0.1).max(20).listen().onChange(function(v){
         camera.near=Math.min(camera.far-0.5,v);
+        mProjection=perspective(camera.fovy,camera.aspect,camera.near,camera.far);
     });
     cameraGui.add(camera,"far").min(0.1).max(20).listen().onChange(function(v){
         camera.far=Math.min(camera.far-0.5,v);
+        mProjection=perspective(camera.fovy,camera.aspect,camera.near,camera.far);
     })
 
     const eyeGui=cameraGui.addFolder("eye");
@@ -102,11 +112,12 @@ function setup(shaders)
 
     const upGui=cameraGui.addFolder("up");
     upGui.add(camera.up,"x").min(0).max(20).listen();
-    upGui.add(camera.up,"y").min(0).max(20).listen();
+    upGui.add(camera.up,"y").min(1).max(20).listen();
     upGui.add(camera.up,"z").min(0).max(20).listen();
 
-    gl.clearColor(0.05, 0.05, 0.05, 1.0);
+    gl.clearColor(0.25, 0.25, 0.25, 1.0);
     CUBE.init(gl);
+    TORUS.init(gl);
     gl.enable(gl.DEPTH_TEST);   // Enables Z-buffer depth test
     gl.enable(gl.CULL_FACE);    //Enables Back-face Culling
     
@@ -121,7 +132,7 @@ function setup(shaders)
         camera.aspect = canvas.width / canvas.height;
 
         gl.viewport(0,0,canvas.width, canvas.height);
-        mProjection = ortho(-VP_DISTANCE*camera.aspect,VP_DISTANCE*camera.aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
+        mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);//ortho(-VP_DISTANCE*camera.aspect,VP_DISTANCE*camera.aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
     }
 
     function uploadModelView()
@@ -129,17 +140,19 @@ function setup(shaders)
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelView()));
     }
 
-    function Sun()
+    function floor()
     {
-        // Don't forget to scale the sun, rotate it around the y axis at the correct speed
         multScale([3, 0.1, 3]);
         multTranslation([0,-0.05,0]);
-
-        // Send the current modelview matrix to the vertex shader
         uploadModelView();
 
-        // Draw a sphere representing the sun
         CUBE.draw(gl, program, mode);
+    }
+    function object(){
+        multTranslation([0,0.8,0]);
+        uploadModelView();
+
+        artefact.draw(gl,program,mode);
     }
 
     function render()
@@ -156,7 +169,10 @@ function setup(shaders)
         loadMatrix(lookAt([camera.eye.x,camera.eye.y,camera.eye.z], [camera.at.x,camera.at.y,camera.at.z], [camera.up.x,camera.up.y,camera.up.z]));
         
         pushMatrix();
-            Sun();
+            floor();
+        popMatrix();
+        pushMatrix();
+            object();
         popMatrix();
     }
 }
