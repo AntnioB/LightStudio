@@ -26,6 +26,12 @@ uniform LightInfo uLights[MAX_LIGHTS]; //Array of lights present in the scene
 uniform MaterialInfo uMaterial; //Material of the object being drawn
 
 void main() {
+
+    
+
     vec3 c = fNormal + vec3(1.0, 1.0, 1.0);
-    gl_FragColor = vec4(0.5*c, 1.0);
+    if(uNLights==1){
+            gl_FragColor=vec4(uLights[0].Ia/255.0,1.0);
+    }
+    else gl_FragColor = vec4(0.5*c, 1.0);
 }

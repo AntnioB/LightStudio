@@ -198,16 +198,20 @@ function setup(shaders)
                 isDirectional:false,
                 isActive:true
             };
+            const number=nLights;
             const light=lightsF.addFolder("Light "+nLights);
-            light.add(lights[nLights],"x").step(0.1);
-            light.add(lights[nLights],"y").step(0.1);
-            light.add(lights[nLights],"z").step(0.1);
-            light.addColor(lights[nLights],"Ia");
-            light.addColor(lights[nLights],"Id");
-            light.addColor(lights[nLights],"Is");
-            light.add(lights[nLights],"isDirectional");
-            light.add(lights[nLights],"isActive");
+            light.add(lights[nLights],"x").step(0.1).onChange(function(){updateLight(number);});
+            light.add(lights[nLights],"y").step(0.1).onChange(function(){updateLight(number);});
+            light.add(lights[nLights],"z").step(0.1).onChange(function(){updateLight(number);});
+            light.addColor(lights[nLights],"Ia").onChange(function(){updateLight(number);});
+            light.addColor(lights[nLights],"Id").onChange(function(){updateLight(number);});
+            light.addColor(lights[nLights],"Is").onChange(function(){updateLight(number);});
+            light.add(lights[nLights],"isDirectional").onChange(function(){updateLight(number);});
+            light.add(lights[nLights],"isActive").onChange(function(){updateLight(number);});
             nLights++;
+            const uNLightsLocation = gl.getUniformLocation(program,"uNLights");
+            gl.uniform1i(uNLightsLocation,nLights);
+            updateLight(number);
         }
     }
 
@@ -217,6 +221,21 @@ function setup(shaders)
     };
 
     lightsF.add(obj,"addLight");
+
+    function updateLight(i){
+        let lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].pos");
+        gl.uniform3f(lightuLocation,lights[i].x,lights[i].y,lights[i].z);
+        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Ia");
+        gl.uniform3fv(lightuLocation,lights[i].Ia);
+        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Id");
+        gl.uniform3fv(lightuLocation,lights[i].Id);
+        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Is");
+        gl.uniform3fv(lightuLocation,lights[i].Is);
+        lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isDirectional");
+        gl.uniform1i(lightuLocation,lights[i].isDirectional);
+        lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isActive");
+        gl.uniform1i(lightuLocation,lights[i].isDirectional);
+    }
 
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
     CUBE.init(gl);
