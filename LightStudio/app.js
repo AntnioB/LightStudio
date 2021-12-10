@@ -1,4 +1,4 @@
-    import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
+import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
 import { ortho, lookAt, flatten,perspective, radians } from "../../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale, multTranslation, popMatrix, pushMatrix} from "../../libs/stack.js";
 import * as dat from "../../libs/dat.gui.module.js";
@@ -19,6 +19,10 @@ let animation = true;   // Animation is running
 let artefact=TORUS;     //Type of object to be drawn
 
 const VP_DISTANCE = 5;
+
+//Lights
+const MAX_LIGHTS=8;
+let nLights=0; //number of lights used
 
 let camera ={
     eye:{
@@ -51,6 +55,13 @@ let options={
 
 let types={
     shape:"Torus",
+};
+
+let artefactMaterial={
+    Ka:[255,255,255],
+    Kd:[255,255,255],
+    Ks:[255,255,255],
+    shininess:50.0
 };
 
 function setup(shaders)
@@ -94,26 +105,24 @@ function setup(shaders)
         else gl.disable(gl.CULL_FACE);
     })
 
-    
-
     const cameraGui= gui.addFolder("camera");
     cameraGui.add(camera,"fovy").min(1).max(100).step(1).listen().onChange(function (v){
         mProjection= perspective(camera.fovy,camera.aspect,camera.near,camera.far);
     });
-    cameraGui.add(camera,"aspect").min(0).max(10).step(1).listen().domElement.style.pointerEvents="none";
+    cameraGui.add(camera,"aspect").listen().domElement.style.pointerEvents="none";
     cameraGui.add(camera,"near").min(0.1).max(20).listen().onChange(function(v){
         camera.near=Math.min(camera.far-0.5,v);
         mProjection=perspective(camera.fovy,camera.aspect,camera.near,camera.far);
     });
-    cameraGui.add(camera,"far").min(0.1).max(20).listen().onChange(function(v){
+    cameraGui.add(camera,"far").min(0.1).max(40).listen().onChange(function(v){
         camera.far=Math.min(camera.far-0.5,v);
         mProjection=perspective(camera.fovy,camera.aspect,camera.near,camera.far);
     })
 
     const eyeGui=cameraGui.addFolder("eye");
-    eyeGui.add(camera.eye,"x").min(0).max(20).listen();
-    eyeGui.add(camera.eye,"y").min(0).max(20).listen();
-    eyeGui.add(camera.eye,"z").min(0).max(20).listen();
+    eyeGui.add(camera.eye,"x").min(-20).max(20).listen();
+    eyeGui.add(camera.eye,"y").min(-2).max(10).listen();
+    eyeGui.add(camera.eye,"z").min(-20).max(20).listen();
 
     const atGui=cameraGui.addFolder("at");
     atGui.add(camera.at,"x").min(0).max(20).listen();
@@ -125,7 +134,8 @@ function setup(shaders)
     upGui.add(camera.up,"y").min(1).max(20).listen();
     upGui.add(camera.up,"z").min(0).max(20).listen();
 
-    const artefactGui= gui.addFolder("Object");
+    const objectGui = new dat.GUI();
+    const artefactGui= objectGui.addFolder("Object");
     artefactGui.add(types, "shape",["Cube", "Cylinder", "Pyramid", "Sphere", "Torus"]).onChange(function(v){
         switch(v){
             case "Cube":
@@ -145,6 +155,33 @@ function setup(shaders)
                 break;
         }
     })
+
+    const material= objectGui.addFolder("Material");
+    material.addColor(artefactMaterial,"Ka").onChange(function(v){
+        const materialInfoL = gl.getUniformLocation(program,"uMaterial.Ka");
+        gl.uniform3fv(materialInfoL,artefactMaterial.Ka);
+    });
+    material.addColor(artefactMaterial,"Kd").onChange(function(v){
+        const materialInfoL = gl.getUniformLocation(program,"uMaterial.Kd");
+        gl.uniform3fv(materialInfoL,artefactMaterial.Kd);
+    });
+    material.addColor(artefactMaterial,"Ks").onChange(function(v){
+        const materialInfoL = gl.getUniformLocation(program,"uMaterial.Ks");
+        gl.uniform3fv(materialInfoL,artefactMaterial.Ks);
+    });
+    material.add(artefactMaterial,"shininess").min(0).max(100).step(1).onChange(function(v){
+        const materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
+        gl.uniform1f(materialInfoL,artefactMaterial.shininess/255);
+    });
+
+    let materialInfoL = gl.getUniformLocation(program,"uMaterial.Ka");
+    gl.uniform3fv(materialInfoL,artefactMaterial.Ka);
+    materialInfoL = gl.getUniformLocation(program,"uMaterial.Kd");
+    gl.uniform3fv(materialInfoL,artefactMaterial.Kd);
+    materialInfoL = gl.getUniformLocation(program,"uMaterial.Ks");
+    gl.uniform3fv(materialInfoL,artefactMaterial.Ks);
+    materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
+    gl.uniform1f(materialInfoL,artefactMaterial.shininess/255);
 
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
     CUBE.init(gl);
@@ -172,7 +209,9 @@ function setup(shaders)
     
     function rotateEye(val){
         let radius= Math.hypot(camera.eye.x, camera.eye.z);
-        let t=Math.acos(camera.eye.x/radius);
+        let t=Math.acos((camera.eye.x)/radius);
+        if(camera.eye.z<0)
+            t=-t;
         val=radians(val);
         camera.eye.x=radius*Math.cos(t+val);
         camera.eye.z=radius*Math.sin(t+val);
@@ -180,10 +219,12 @@ function setup(shaders)
     document.onkeydown = function(event) {
         switch (event.key){
             case 'ArrowUp':
-                camera.eye.y=camera.eye.y+0.1;
+                if(camera.eye.y<=10)
+                    camera.eye.y=camera.eye.y+0.1;
                 break;
             case 'ArrowDown':
-                camera.eye.y=camera.eye.y-0.1;
+                if(camera.eye.y>=-2)
+                    camera.eye.y=camera.eye.y-0.1;
                 break;
             case 'ArrowRight':
                 rotateEye(1);
