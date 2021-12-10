@@ -46,15 +46,11 @@ let options={
     wireframe: false,
     normals: true,
     zBuffer:true,
-    backFaceCulling:true
+    backFaceCulling:true,
 };
 
 let types={
-    cube: false,
-    sphere: false,
-    cylinder: false,
-    pyramid: false,
-    torus: true,
+    shape:"Torus",
 };
 
 function setup(shaders)
@@ -68,10 +64,6 @@ function setup(shaders)
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
     gl.useProgram(program);
-<<<<<<< HEAD
-
-=======
->>>>>>> a9942c5 (Multiple artefactcs working)
 
     let mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);
 
@@ -134,57 +126,76 @@ function setup(shaders)
     upGui.add(camera.up,"z").min(0).max(20).listen();
 
     const artefactGui= gui.addFolder("Object");
-    const artefactType = artefactGui.addFolder("Type");
-    artefactType.add(types,"cube").listen().onChange(function(v){
-        if(v){
-            types.cylinder=false;
-            types.pyramid=false;
-            types.sphere=false;
-            types.torus=false;
-            artefact=CUBE;
+    //const artefactType = artefactGui.addFolder("Type");
+    artefactGui.add(types, "shape",["Cube", "Cylinder", "Pyramid", "Sphere", "Torus"]).onChange(function(v){
+        switch(v){
+            case "Cube":
+                artefact=CUBE;
+                break;
+            case "Cylinder":
+                artefact=CYLINDER;
+                break;
+            case "Pyramid":
+                artefact=PYRAMID;
+                break;
+            case "Sphere":
+                artefact=SPHERE;
+                break;
+            case "Torus":
+                artefact=TORUS;
+                break;
         }
-        else types.cube=true;
-    });
-    artefactType.add(types,"cylinder").listen().onChange(function(v){
-        if(v){
-            types.cube=false;
-            types.pyramid=false;
-            types.sphere=false;
-            types.torus=false;
-            artefact=CYLINDER;
-        }
-        else types.cylinder=true;
-    });
-    artefactType.add(types,"pyramid").listen().onChange(function(v){
-        if(v){
-            types.cylinder=false;
-            types.cube=false;
-            types.sphere=false;
-            types.torus=false;
-            artefact=PYRAMID;
-        }
-        else types.pyramid=true;
-    });
-    artefactType.add(types,"sphere").listen().onChange(function(v){
-        if(v){
-            types.cylinder=false;
-            types.cube=false;
-            types.pyramid=false;
-            types.torus=false;
-            artefact=SPHERE;
-        }
-        else types.sphere=true;
-    });
-    artefactType.add(types,"torus").listen().onChange(function(v){
-        if(v){
-            types.cylinder=false;
-            types.cube=false;
-            types.sphere=false;
-            types.pyramid=false;
-            artefact=TORUS;
-        }
-        else types.torus=true;
-    });
+    })
+    // artefactType.add(types,"cube").listen().onChange(function(v){
+    //     if(v){
+    //         types.cylinder=false;
+    //         types.pyramid=false;
+    //         types.sphere=false;
+    //         types.torus=false;
+    //         artefact=CUBE;
+    //     }
+    //     else types.cube=true;
+    // });
+    // artefactType.add(types,"cylinder").listen().onChange(function(v){
+    //     if(v){
+    //         types.cube=false;
+    //         types.pyramid=false;
+    //         types.sphere=false;
+    //         types.torus=false;
+    //         artefact=CYLINDER;
+    //     }
+    //     else types.cylinder=true;
+    // });
+    // artefactType.add(types,"pyramid").listen().onChange(function(v){
+    //     if(v){
+    //         types.cylinder=false;
+    //         types.cube=false;
+    //         types.sphere=false;
+    //         types.torus=false;
+    //         artefact=PYRAMID;
+    //     }
+    //     else types.pyramid=true;
+    // });
+    // artefactType.add(types,"sphere").listen().onChange(function(v){
+    //     if(v){
+    //         types.cylinder=false;
+    //         types.cube=false;
+    //         types.pyramid=false;
+    //         types.torus=false;
+    //         artefact=SPHERE;
+    //     }
+    //     else types.sphere=true;
+    // });
+    // artefactType.add(types,"torus").listen().onChange(function(v){
+    //     if(v){
+    //         types.cylinder=false;
+    //         types.cube=false;
+    //         types.sphere=false;
+    //         types.pyramid=false;
+    //         artefact=TORUS;
+    //     }
+    //     else types.torus=true;
+    // });
 
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
     CUBE.init(gl);
