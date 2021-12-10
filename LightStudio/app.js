@@ -4,6 +4,10 @@ import {modelView, loadMatrix, multRotationY, multScale, multTranslation, popMat
 import * as dat from "../../libs/dat.gui.module.js";
 import * as CUBE from '../../libs/cube.js';
 import * as TORUS from '../../libs/torus.js';
+import * as SPHERE from '../../libs/sphere.js';
+import * as CYLINDER from '../../libs/cylinder.js';
+import * as PYRAMID from '../../libs/pyramid.js';
+
 
 /** @type WebGLRenderingContext */
 let gl;
@@ -12,7 +16,7 @@ let time = 0;           // Global simulation time in days
 let speed = 1/60.0;     // Speed (how many days added to time on each render pass
 let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 let animation = true;   // Animation is running
-let artefact=TORUS;
+let artefact=TORUS;     //Type of object to be drawn
 
 const VP_DISTANCE = 5;
 
@@ -45,6 +49,14 @@ let options={
     backFaceCulling:true
 };
 
+let types={
+    cube: false,
+    sphere: false,
+    cylinder: false,
+    pyramid: false,
+    torus: true,
+};
+
 function setup(shaders)
 {
     let canvas = document.getElementById("gl-canvas");
@@ -56,9 +68,12 @@ function setup(shaders)
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
     gl.useProgram(program);
+<<<<<<< HEAD
 
+=======
+>>>>>>> a9942c5 (Multiple artefactcs working)
 
-    let mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);//ortho(-VP_DISTANCE*aspect,VP_DISTANCE*aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
+    let mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);
 
     resize_canvas();
     window.addEventListener("resize", resize_canvas);
@@ -118,8 +133,65 @@ function setup(shaders)
     upGui.add(camera.up,"y").min(1).max(20).listen();
     upGui.add(camera.up,"z").min(0).max(20).listen();
 
+    const artefactGui= gui.addFolder("Object");
+    const artefactType = artefactGui.addFolder("Type");
+    artefactType.add(types,"cube").listen().onChange(function(v){
+        if(v){
+            types.cylinder=false;
+            types.pyramid=false;
+            types.sphere=false;
+            types.torus=false;
+            artefact=CUBE;
+        }
+        else types.cube=true;
+    });
+    artefactType.add(types,"cylinder").listen().onChange(function(v){
+        if(v){
+            types.cube=false;
+            types.pyramid=false;
+            types.sphere=false;
+            types.torus=false;
+            artefact=CYLINDER;
+        }
+        else types.cylinder=true;
+    });
+    artefactType.add(types,"pyramid").listen().onChange(function(v){
+        if(v){
+            types.cylinder=false;
+            types.cube=false;
+            types.sphere=false;
+            types.torus=false;
+            artefact=PYRAMID;
+        }
+        else types.pyramid=true;
+    });
+    artefactType.add(types,"sphere").listen().onChange(function(v){
+        if(v){
+            types.cylinder=false;
+            types.cube=false;
+            types.pyramid=false;
+            types.torus=false;
+            artefact=SPHERE;
+        }
+        else types.sphere=true;
+    });
+    artefactType.add(types,"torus").listen().onChange(function(v){
+        if(v){
+            types.cylinder=false;
+            types.cube=false;
+            types.sphere=false;
+            types.pyramid=false;
+            artefact=TORUS;
+        }
+        else types.torus=true;
+    });
+
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
     CUBE.init(gl);
+    TORUS.init(gl);
+    CYLINDER.init(gl);
+    PYRAMID.init(gl);
+    SPHERE.init(gl);
     TORUS.init(gl);
     gl.enable(gl.DEPTH_TEST);   // Enables Z-buffer depth test
     gl.enable(gl.CULL_FACE);    //Enables Back-face Culling
@@ -135,7 +207,7 @@ function setup(shaders)
         camera.aspect = canvas.width / canvas.height;
 
         gl.viewport(0,0,canvas.width, canvas.height);
-        mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);//ortho(-VP_DISTANCE*camera.aspect,VP_DISTANCE*camera.aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
+        mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);
     }
 
     function uploadModelView()
