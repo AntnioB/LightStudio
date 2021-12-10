@@ -59,9 +59,9 @@ let nLights=0; //number of lights used
 let lights=[];
 
 let artefactMaterial={
-    Ka:[255,255,255],
-    Kd:[255,255,255],
-    Ks:[255,255,255],
+    Ka:[100,100,100],
+    Kd:[100,100,100],
+    Ks:[100,100,100],
     shininess:50.0
 };
 
@@ -192,9 +192,9 @@ function setup(shaders)
                 x:0,
                 y:0,
                 z:0,
-                Ia:[255,255,255],
-                Id:[255,255,255],
-                Is:[255,255,255],
+                Ia:[100,100,100],
+                Id:[100,100,100],
+                Is:[100,100,100],
                 isDirectional:false,
                 isActive:true
             };
@@ -234,7 +234,7 @@ function setup(shaders)
         lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isDirectional");
         gl.uniform1i(lightuLocation,lights[i].isDirectional);
         lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isActive");
-        gl.uniform1i(lightuLocation,lights[i].isDirectional);
+        gl.uniform1i(lightuLocation,lights[i].isActive);
     }
 
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
