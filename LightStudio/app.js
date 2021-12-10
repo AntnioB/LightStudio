@@ -55,6 +55,8 @@ function setup(shaders)
     mode=gl.TRIANGLES;
 
     let program = buildProgramFromSources(gl, shaders["shader.vert"], shaders["shader.frag"]);
+    gl.useProgram(program);
+
 
     let mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);//ortho(-VP_DISTANCE*aspect,VP_DISTANCE*aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
 
@@ -68,13 +70,14 @@ function setup(shaders)
         if(v) mode=gl.LINES;
         else mode=gl.TRIANGLES;
     });
+    
     const normalsLocation= gl.getUniformLocation(program,"normals");
-    gl.uniform1f(normalsLocation,1.0);
     optionsGui.add(options, "normals").onChange(function(v){
-        if(v)
-            gl.uniform1f(normalsLocation,1.0);
+        if(v) gl.uniform1f(normalsLocation,1.0);
         else gl.uniform1f(normalsLocation,0.0);
     });
+    gl.uniform1f(normalsLocation,1.0);
+    
     optionsGui.add(options,"zBuffer").onChange(function(v){
         if(v) gl.enable(gl.DEPTH_TEST);
         else gl.disable(gl.DEPTH_TEST);
