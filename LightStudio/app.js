@@ -1,5 +1,5 @@
     import { buildProgramFromSources, loadShadersFromURLS, setupWebGL } from "../../libs/utils.js";
-import { ortho, lookAt, flatten,perspective } from "../../libs/MV.js";
+import { ortho, lookAt, flatten,perspective, radians } from "../../libs/MV.js";
 import {modelView, loadMatrix, multRotationY, multScale, multTranslation, popMatrix, pushMatrix} from "../../libs/stack.js";
 import * as dat from "../../libs/dat.gui.module.js";
 import * as CUBE from '../../libs/cube.js';
@@ -136,6 +136,30 @@ function setup(shaders)
 
         gl.viewport(0,0,canvas.width, canvas.height);
         mProjection = perspective(camera.fovy,camera.aspect,camera.near,camera.far);//ortho(-VP_DISTANCE*camera.aspect,VP_DISTANCE*camera.aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
+    }
+    
+    function rotateEye(val){
+        let radius= Math.hypot(camera.eye.x, camera.eye.z);
+        let t=Math.acos(camera.eye.x/radius);
+        val=radians(val);
+        camera.eye.x=radius*Math.cos(t+val);
+        camera.eye.z=radius*Math.sin(t+val);
+    }
+    document.onkeydown = function(event) {
+        switch (event.key){
+            case 'ArrowUp':
+                camera.eye.y=camera.eye.y+0.1;
+                break;
+            case 'ArrowDown':
+                camera.eye.y=camera.eye.y-0.1;
+                break;
+            case 'ArrowRight':
+                rotateEye(1);
+                break;
+            case 'ArrowLeft':
+                rotateEye(-1)
+                break;
+        }
     }
 
     function uploadModelView()
