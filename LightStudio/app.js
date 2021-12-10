@@ -20,10 +20,6 @@ let artefact=TORUS;     //Type of object to be drawn
 
 const VP_DISTANCE = 5;
 
-//Lights
-const MAX_LIGHTS=8;
-let nLights=0; //number of lights used
-
 let camera ={
     eye:{
         x:5,
@@ -56,6 +52,11 @@ let options={
 let types={
     shape:"Torus",
 };
+
+//Lights
+const MAX_LIGHTS=8;
+let nLights=0; //number of lights used
+let lights=[];
 
 let artefactMaterial={
     Ka:[255,255,255],
@@ -183,6 +184,40 @@ function setup(shaders)
     materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
     gl.uniform1f(materialInfoL,artefactMaterial.shininess/255);
 
+    const lightsF = gui.addFolder("Lights");
+
+    function addLight(){
+        if(nLights<MAX_LIGHTS){
+            lights[nLights]={
+                x:0,
+                y:0,
+                z:0,
+                Ia:[255,255,255],
+                Id:[255,255,255],
+                Is:[255,255,255],
+                isDirectional:false,
+                isActive:true
+            };
+            const light=lightsF.addFolder("Light "+nLights);
+            light.add(lights[nLights],"x").step(0.1);
+            light.add(lights[nLights],"y").step(0.1);
+            light.add(lights[nLights],"z").step(0.1);
+            light.addColor(lights[nLights],"Ia");
+            light.addColor(lights[nLights],"Id");
+            light.addColor(lights[nLights],"Is");
+            light.add(lights[nLights],"isDirectional");
+            light.add(lights[nLights],"isActive");
+            nLights++;
+        }
+    }
+
+
+    let obj={
+        addLight: function() {addLight();}
+    };
+
+    lightsF.add(obj,"addLight");
+
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
     CUBE.init(gl);
     TORUS.init(gl);
@@ -235,6 +270,8 @@ function setup(shaders)
         }
     }
 
+    
+
     function uploadModelView()
     {
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelView()));
@@ -253,6 +290,17 @@ function setup(shaders)
         uploadModelView();
 
         artefact.draw(gl,program,mode);
+    }
+
+    function light(i){
+        if(lights[i].isActive){
+            pushMatrix();
+            multScale([0.1,0.1,0.1]);
+            multTranslation([lights[i].x/0.1,lights[i].y/0.1,lights[i].z/0.1]);
+            uploadModelView();
+            SPHERE.draw(gl,program,gl.LINES);
+            popMatrix();
+        }
     }
 
     function render()
@@ -274,6 +322,9 @@ function setup(shaders)
         pushMatrix();
             object();
         popMatrix();
+        for(let i =0;i<nLights;i++){
+            light(i);
+        }
     }
 }
 
