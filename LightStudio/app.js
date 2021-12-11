@@ -65,6 +65,13 @@ let artefactMaterial={
     shininess:50.0
 };
 
+let floorMaterial={
+    Ka:[100,100,100],
+    Kd:[100,100,100],
+    Ks:[100,100,100],
+    shininess:50.0
+};
+
 function setup(shaders)
 {
     let canvas = document.getElementById("gl-canvas");
@@ -157,32 +164,11 @@ function setup(shaders)
         }
     })
 
-    const material= objectGui.addFolder("Material");
-    material.addColor(artefactMaterial,"Ka").onChange(function(v){
-        const materialInfoL = gl.getUniformLocation(program,"uMaterial.Ka");
-        gl.uniform3fv(materialInfoL,artefactMaterial.Ka);
-    });
-    material.addColor(artefactMaterial,"Kd").onChange(function(v){
-        const materialInfoL = gl.getUniformLocation(program,"uMaterial.Kd");
-        gl.uniform3fv(materialInfoL,artefactMaterial.Kd);
-    });
-    material.addColor(artefactMaterial,"Ks").onChange(function(v){
-        const materialInfoL = gl.getUniformLocation(program,"uMaterial.Ks");
-        gl.uniform3fv(materialInfoL,artefactMaterial.Ks);
-    });
-    material.add(artefactMaterial,"shininess").min(1).max(128).step(1).onChange(function(v){
-        const materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
-        gl.uniform1f(materialInfoL,artefactMaterial.shininess/255);
-    });
-
-    let materialInfoL = gl.getUniformLocation(program,"uMaterial.Ka");
-    gl.uniform3fv(materialInfoL,artefactMaterial.Ka);
-    materialInfoL = gl.getUniformLocation(program,"uMaterial.Kd");
-    gl.uniform3fv(materialInfoL,artefactMaterial.Kd);
-    materialInfoL = gl.getUniformLocation(program,"uMaterial.Ks");
-    gl.uniform3fv(materialInfoL,artefactMaterial.Ks);
-    materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
-    gl.uniform1f(materialInfoL,artefactMaterial.shininess/255);
+    const material= artefactGui.addFolder("Material");
+    material.addColor(artefactMaterial,"Ka");
+    material.addColor(artefactMaterial,"Kd");
+    material.addColor(artefactMaterial,"Ks");
+    material.add(artefactMaterial,"shininess").min(1).max(128).step(1);
 
     const lightsF = gui.addFolder("Lights");
 
@@ -217,7 +203,8 @@ function setup(shaders)
 
 
     let obj={
-        addLight: function() {addLight();}
+        addLight: function() {addLight();},
+        syncFloor: function(){syncFloor();}
     };
 
     lightsF.add(obj,"addLight");
@@ -236,6 +223,42 @@ function setup(shaders)
         lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isActive");
         gl.uniform1i(lightuLocation,lights[i].isActive);
     }
+
+    function updateMaterial(){
+        let materialInfoL = gl.getUniformLocation(program,"uMaterial.Ka");
+        gl.uniform3fv(materialInfoL,artefactMaterial.Ka);
+        materialInfoL = gl.getUniformLocation(program,"uMaterial.Kd");
+        gl.uniform3fv(materialInfoL,artefactMaterial.Kd);
+        materialInfoL = gl.getUniformLocation(program,"uMaterial.Ks");
+        gl.uniform3fv(materialInfoL,artefactMaterial.Ks);
+        materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
+        gl.uniform1f(materialInfoL,artefactMaterial.shininess);
+    }
+
+    //Floor
+    const floorMat=objectGui.addFolder("Floor Material");
+    floorMat.addColor(floorMaterial,"Ka").listen();
+    floorMat.addColor(floorMaterial,"Kd").listen();
+    floorMat.addColor(floorMaterial,"Ks").listen();
+    floorMat.add(floorMaterial,"shininess").min(1).max(128);
+
+    function updateFloorMaterial(){
+        let materialInfoL = gl.getUniformLocation(program,"uMaterial.Ka");
+        gl.uniform3fv(materialInfoL,floorMaterial.Ka);
+        materialInfoL = gl.getUniformLocation(program,"uMaterial.Kd");
+        gl.uniform3fv(materialInfoL,floorMaterial.Kd);
+        materialInfoL = gl.getUniformLocation(program,"uMaterial.Ks");
+        gl.uniform3fv(materialInfoL,floorMaterial.Ks);
+        materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
+        gl.uniform1f(materialInfoL,floorMaterial.shininess);
+    }
+
+    function syncFloor(){
+        const tmp=artefactMaterial;
+        floorMaterial=tmp;
+    }
+
+    floorMat.add(obj,"syncFloor");
 
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
     CUBE.init(gl);
@@ -289,8 +312,6 @@ function setup(shaders)
         }
     }
 
-    
-
     function uploadModelView()
     {
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelView()));
@@ -298,6 +319,7 @@ function setup(shaders)
 
     function floor()
     {
+        updateFloorMaterial();
         multScale([3, 0.1, 3]);
         multTranslation([0,-0.05,0]);
         uploadModelView();
@@ -305,6 +327,7 @@ function setup(shaders)
         CUBE.draw(gl, program, mode);
     }
     function object(){
+        updateMaterial();
         multTranslation([0,0.8,0]);
         uploadModelView();
 

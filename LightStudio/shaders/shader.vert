@@ -10,6 +10,6 @@ varying vec3 vVertex;
 
 void main() {
     gl_Position = mProjection * mModelView * vPosition;
-    fNormal= vNormal*normals;
-    vVertex= vec3(gl_Position);
+    fNormal= vec3(mModelView*vec4(vNormal,0.0));//*normals;
+    vVertex= vec3(mModelView*vPosition);//vec3(gl_Position);
 }
