@@ -170,7 +170,7 @@ function setup(shaders)
         const materialInfoL = gl.getUniformLocation(program,"uMaterial.Ks");
         gl.uniform3fv(materialInfoL,artefactMaterial.Ks);
     });
-    material.add(artefactMaterial,"shininess").min(0).max(100).step(1).onChange(function(v){
+    material.add(artefactMaterial,"shininess").min(1).max(128).step(1).onChange(function(v){
         const materialInfoL = gl.getUniformLocation(program,"uMaterial.shininess");
         gl.uniform1f(materialInfoL,artefactMaterial.shininess/255);
     });

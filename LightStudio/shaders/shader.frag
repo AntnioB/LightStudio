@@ -33,11 +33,12 @@ void main() {
     int nLights=uNLights;
     for(int i=0;i<MAX_LIGHTS;i++){
         if(uLights[i].isActive)
-            ambientColor=ambientColor + uLights[i].Ia/255.0 * uMaterial.Ka / 255.0;
+            ambientColor=ambientColor + uLights[i].Ia/255.0;
     }
+    ambientColor= ambientColor* uMaterial.Ka/255.0;
 
     //General calculations
-    vec3 toLight= uLights[0].pos - vVertex;
+    vec3 toLight;
     toLight = normalize(toLight);
     vec3 normalizeFNormal= normalize(fNormal);
 
@@ -46,6 +47,7 @@ void main() {
     vec3 difuseColor = vec3(0.0,0.0,0.0);
     for(int i=0;i<MAX_LIGHTS;i++){
         if(!uLights[i].isActive) continue;
+        toLight =uLights[i].pos - vVertex;
         cosAngle = dot(normalizeFNormal,toLight);
         cosAngle= clamp(cosAngle,0.0,1.0);
         difuseColor = difuseColor + uMaterial.Kd/255.0*uLights[i].Id/255.0*cosAngle;
@@ -55,7 +57,8 @@ void main() {
     vec3 specularColor=vec3(0.0,0.0,0.0);
     for(int i = 0; i<MAX_LIGHTS;i++){
         if(!uLights[i].isActive) continue;
-        vec3 reflection = 2.0* dot(normalizeFNormal,toLight)* normalizeFNormal-toLight;
+        toLight =uLights[i].pos - vVertex;
+        vec3 reflection = 2.0 * dot(normalizeFNormal,toLight)* normalizeFNormal-toLight;
         reflection=normalize(reflection);
 
         vec3 toCamera= -1.0 * vVertex;
