@@ -53,25 +53,6 @@ let types={
     shape:"Torus",
 };
 
-//Lights
-const MAX_LIGHTS=8;
-let nLights=0; //number of lights used
-let lights=[];
-
-let artefactMaterial={
-    Ka:[100,100,100],
-    Kd:[100,100,100],
-    Ks:[100,100,100],
-    shininess:50.0
-};
-
-let floorMaterial={
-    Ka:[100,100,100],
-    Kd:[100,100,100],
-    Ks:[100,100,100],
-    shininess:50.0
-};
-
 function setup(shaders)
 {
     let canvas = document.getElementById("gl-canvas");
@@ -142,6 +123,65 @@ function setup(shaders)
     upGui.add(camera.up,"y").min(1).max(20).listen();
     upGui.add(camera.up,"z").min(0).max(20).listen();
 
+    //Lights
+    const MAX_LIGHTS=8;
+    let nLights=0; //number of lights used
+    let lights=[];
+
+    const lightsF = gui.addFolder("Lights");
+
+    function addLight(){
+        if(nLights<MAX_LIGHTS){
+            lights[nLights]={
+                x:0,
+                y:0,
+                z:0,
+                Ia:[100,100,100],
+                Id:[100,100,100],
+                Is:[100,100,100],
+                isDirectional:false,
+                isActive:true
+            };
+            const number=nLights;
+            const light=lightsF.addFolder("Light "+nLights);
+            light.add(lights[nLights],"x").step(0.1);
+            light.add(lights[nLights],"y").step(0.1);
+            light.add(lights[nLights],"z").step(0.1);
+            light.addColor(lights[nLights],"Ia");
+            light.addColor(lights[nLights],"Id");
+            light.addColor(lights[nLights],"Is");
+            light.add(lights[nLights],"isDirectional");
+            light.add(lights[nLights],"isActive");
+            nLights++;
+            const uNLightsLocation = gl.getUniformLocation(program,"uNLights");
+            gl.uniform1i(uNLightsLocation,nLights);
+            updateLight(number);
+        }
+    }
+
+    function updateLight(i){
+        let lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].pos");
+        gl.uniform3f(lightuLocation,lights[i].x,lights[i].y,lights[i].z);
+        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Ia");
+        gl.uniform3fv(lightuLocation,lights[i].Ia);
+        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Id");
+        gl.uniform3fv(lightuLocation,lights[i].Id);
+        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Is");
+        gl.uniform3fv(lightuLocation,lights[i].Is);
+        lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isDirectional");
+        gl.uniform1i(lightuLocation,lights[i].isDirectional);
+        lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isActive");
+        gl.uniform1i(lightuLocation,lights[i].isActive);
+    }
+
+    //Artefact
+    let artefactMaterial={
+        Ka:[100,100,100],
+        Kd:[100,100,100],
+        Ks:[100,100,100],
+        shininess:50.0
+    };    
+
     const objectGui = new dat.GUI();
     const artefactGui= objectGui.addFolder("Object");
     artefactGui.add(types, "shape",["Cube", "Cylinder", "Pyramid", "Sphere", "Torus"]).onChange(function(v){
@@ -162,67 +202,13 @@ function setup(shaders)
                 artefact=TORUS;
                 break;
         }
-    })
+    });
 
     const material= artefactGui.addFolder("Material");
     material.addColor(artefactMaterial,"Ka");
     material.addColor(artefactMaterial,"Kd");
     material.addColor(artefactMaterial,"Ks");
     material.add(artefactMaterial,"shininess").min(1).max(128).step(1);
-
-    const lightsF = gui.addFolder("Lights");
-
-    function addLight(){
-        if(nLights<MAX_LIGHTS){
-            lights[nLights]={
-                x:0,
-                y:0,
-                z:0,
-                Ia:[100,100,100],
-                Id:[100,100,100],
-                Is:[100,100,100],
-                isDirectional:false,
-                isActive:true
-            };
-            const number=nLights;
-            const light=lightsF.addFolder("Light "+nLights);
-            light.add(lights[nLights],"x").step(0.1).onChange(function(){updateLight(number);});
-            light.add(lights[nLights],"y").step(0.1).onChange(function(){updateLight(number);});
-            light.add(lights[nLights],"z").step(0.1).onChange(function(){updateLight(number);});
-            light.addColor(lights[nLights],"Ia").onChange(function(){updateLight(number);});
-            light.addColor(lights[nLights],"Id").onChange(function(){updateLight(number);});
-            light.addColor(lights[nLights],"Is").onChange(function(){updateLight(number);});
-            light.add(lights[nLights],"isDirectional").onChange(function(){updateLight(number);});
-            light.add(lights[nLights],"isActive").onChange(function(){updateLight(number);});
-            nLights++;
-            const uNLightsLocation = gl.getUniformLocation(program,"uNLights");
-            gl.uniform1i(uNLightsLocation,nLights);
-            updateLight(number);
-        }
-    }
-
-
-    let obj={
-        addLight: function() {addLight();},
-        syncFloor: function(){syncFloor();}
-    };
-
-    lightsF.add(obj,"addLight");
-
-    function updateLight(i){
-        let lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].pos");
-        gl.uniform3f(lightuLocation,lights[i].x,lights[i].y,lights[i].z);
-        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Ia");
-        gl.uniform3fv(lightuLocation,lights[i].Ia);
-        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Id");
-        gl.uniform3fv(lightuLocation,lights[i].Id);
-        lightuLocation = gl.getUniformLocation(program,"uLights["+i+"].Is");
-        gl.uniform3fv(lightuLocation,lights[i].Is);
-        lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isDirectional");
-        gl.uniform1i(lightuLocation,lights[i].isDirectional);
-        lightuLocation= gl.getUniformLocation(program,"uLights["+i+"].isActive");
-        gl.uniform1i(lightuLocation,lights[i].isActive);
-    }
 
     function updateMaterial(){
         let materialInfoL = gl.getUniformLocation(program,"uMaterial.Ka");
@@ -236,6 +222,13 @@ function setup(shaders)
     }
 
     //Floor
+    let floorMaterial={
+        Ka:[100,100,100],
+        Kd:[100,100,100],
+        Ks:[100,100,100],
+        shininess:50.0
+    };
+
     const floorMat=objectGui.addFolder("Floor Material");
     floorMat.addColor(floorMaterial,"Ka").listen();
     floorMat.addColor(floorMaterial,"Kd").listen();
@@ -259,7 +252,11 @@ function setup(shaders)
         floorMaterial.Ks=artefactMaterial.Ks;
         floorMaterial.shininess=artefactMaterial.shininess;
     }
-
+    let obj={
+        addLight: function() {addLight();},
+        syncFloor: function(){syncFloor();}
+    };
+    lightsF.add(obj,"addLight");
     floorMat.add(obj,"syncFloor");
 
     gl.clearColor(0.25, 0.25, 0.25, 1.0);
@@ -323,24 +320,25 @@ function setup(shaders)
     {
         updateFloorMaterial();
         multScale([3, 0.1, 3]);
-        multTranslation([0,-0.05,0]);
+        multTranslation([0,-0.1/0.1,0]);
         uploadModelView();
 
         CUBE.draw(gl, program, mode);
     }
     function object(){
         updateMaterial();
-        multTranslation([0,0.8,0]);
+        multTranslation([0,0.5,0]);
         uploadModelView();
 
         artefact.draw(gl,program,mode);
     }
 
     function light(i){
+        updateLight(i);
         if(lights[i].isActive){
             pushMatrix();
             multScale([0.1,0.1,0.1]);
-            multTranslation([lights[i].x/0.1,lights[i].y/0.1,lights[i].z/0.1]);
+            multTranslation([lights[i].x,lights[i].y,lights[i].z]);
             uploadModelView();
             SPHERE.draw(gl,program,gl.LINES);
             popMatrix();
