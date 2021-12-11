@@ -254,8 +254,10 @@ function setup(shaders)
     }
 
     function syncFloor(){
-        const tmp=artefactMaterial;
-        floorMaterial=tmp;
+        floorMaterial.Ka=artefactMaterial.Ka;
+        floorMaterial.Kd=artefactMaterial.Kd;
+        floorMaterial.Ks=artefactMaterial.Ks;
+        floorMaterial.shininess=artefactMaterial.shininess;
     }
 
     floorMat.add(obj,"syncFloor");
