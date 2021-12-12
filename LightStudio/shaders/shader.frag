@@ -59,7 +59,7 @@ void main() {
         if(!uLights[i].isActive) continue;
         toLight =uLights[i].pos - vVertex;
         toLight = normalize(toLight);
-        vec3 reflection = 2.0 * dot(toLight,normalizeFNormal)* normalizeFNormal-toLight;
+        vec3 reflection = 2.0 * dot(toLight,normalizeFNormal)*normalizeFNormal-toLight;
         reflection=normalize(reflection);
 
         vec3 toCamera= -1.0 * vVertex;
