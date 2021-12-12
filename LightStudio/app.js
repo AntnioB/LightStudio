@@ -319,15 +319,16 @@ function setup(shaders)
     function floor()
     {
         updateFloorMaterial();
+        pushMatrix();
+        multTranslation([0,-0.55,0]);
         multScale([3, 0.1, 3]);
-        multTranslation([0,-0.1/0.1,0]);
         uploadModelView();
-
         CUBE.draw(gl, program, mode);
+        popMatrix();
     }
     function object(){
         updateMaterial();
-        multTranslation([0,0.5,0]);
+        //multTranslation([0,0.5,0]);
         uploadModelView();
 
         artefact.draw(gl,program,mode);
@@ -337,8 +338,8 @@ function setup(shaders)
         updateLight(i);
         if(lights[i].isActive){
             pushMatrix();
-            multScale([0.1,0.1,0.1]);
             multTranslation([lights[i].x,lights[i].y,lights[i].z]);
+            multScale([0.1,0.1,0.1]);
             uploadModelView();
             SPHERE.draw(gl,program,gl.LINES);
             popMatrix();
@@ -365,7 +366,9 @@ function setup(shaders)
             object();
         popMatrix();
         for(let i =0;i<nLights;i++){
+            pushMatrix();
             light(i);
+            popMatrix();
         }
     }
 }
