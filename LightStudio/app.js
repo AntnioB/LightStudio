@@ -44,7 +44,6 @@ let camera ={
 
 let options={
     wireframe: false,
-    normals: true,
     zBuffer:true,
     backFaceCulling:true,
 };
@@ -77,13 +76,6 @@ function setup(shaders)
         if(v) mode=gl.LINES;
         else mode=gl.TRIANGLES;
     });
-    
-    const normalsLocation= gl.getUniformLocation(program,"normals");
-    optionsGui.add(options, "normals").onChange(function(v){
-        if(v) gl.uniform1f(normalsLocation,1.0);
-        else gl.uniform1f(normalsLocation,0.0);
-    });
-    gl.uniform1f(normalsLocation,1.0);
     
     optionsGui.add(options,"zBuffer").onChange(function(v){
         if(v) gl.enable(gl.DEPTH_TEST);
@@ -144,9 +136,9 @@ function setup(shaders)
             };
             const number=nLights;
             const light=lightsF.addFolder("Light "+nLights);
-            light.add(lights[nLights],"x").step(0.1);
-            light.add(lights[nLights],"y").step(0.1);
-            light.add(lights[nLights],"z").step(0.1);
+            light.add(lights[nLights],"x").step(0.01);
+            light.add(lights[nLights],"y").step(0.01);
+            light.add(lights[nLights],"z").step(0.01);
             light.addColor(lights[nLights],"Ia");
             light.addColor(lights[nLights],"Id");
             light.addColor(lights[nLights],"Is");
