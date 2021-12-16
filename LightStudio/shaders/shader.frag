@@ -46,8 +46,16 @@ void main() {
     vec3 difuseColor = vec3(0.0,0.0,0.0);
     for(int i=0;i<MAX_LIGHTS;i++){
         if(!uLights[i].isActive) continue;
-        toLight =uLights[i].pos - vVertex;
-        toLight = normalize(toLight);
+        if(!uLights[i].isDirectional){
+            toLight =uLights[i].pos - vVertex;
+            toLight = normalize(toLight);
+            //cosAngle = dot(normalizeFNormal,toLight);
+            //cosAngle= clamp(cosAngle,0.0,1.0);
+            //difuseColor = difuseColor + uMaterial.Kd/255.0*uLights[i].Id/255.0*cosAngle;
+        }else{
+            toLight=vec3(uLights[i].pos);
+            toLight=normalize(toLight);
+        }
         cosAngle = dot(normalizeFNormal,toLight);
         cosAngle= clamp(cosAngle,0.0,1.0);
         difuseColor = difuseColor + uMaterial.Kd/255.0*uLights[i].Id/255.0*cosAngle;
@@ -57,7 +65,9 @@ void main() {
     vec3 specularColor=vec3(0.0,0.0,0.0);
     for(int i = 0; i<MAX_LIGHTS;i++){
         if(!uLights[i].isActive) continue;
-        toLight =uLights[i].pos - vVertex;
+        if(uLights[i].isDirectional)
+            toLight=uLights[i].pos;
+        else toLight =uLights[i].pos - vVertex;
         toLight = normalize(toLight);
         vec3 reflection = 2.0 * dot(toLight,normalizeFNormal)*normalizeFNormal-toLight;
         reflection=normalize(reflection);

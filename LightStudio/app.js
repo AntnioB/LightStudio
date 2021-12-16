@@ -336,7 +336,7 @@ function setup(shaders)
 
     function light(i){
         updateLight(i);
-        if(lights[i].isActive){
+        if(lights[i].isActive && !lights[i].isDirectional){
             pushMatrix();
             multTranslation([lights[i].x,lights[i].y,lights[i].z]);
             multScale([0.1,0.1,0.1]);
