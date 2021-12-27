@@ -2,6 +2,7 @@ precision highp float;
 
 varying vec3 fNormal;
 varying vec3 vVertex;
+varying mat4 mModelView1;
 
 const int MAX_LIGHTS=8;
 
@@ -47,15 +48,15 @@ void main() {
     for(int i=0;i<MAX_LIGHTS;i++){
         if(!uLights[i].isActive) continue;
         if(!uLights[i].isDirectional){
-            toLight =uLights[i].pos - vVertex;
-            toLight = normalize(toLight);
+            toLight =vec3(mModelView1* vec4(uLights[i].pos,0.0)) - vVertex;
+            //toLight = normalize(toLight);
             //cosAngle = dot(normalizeFNormal,toLight);
             //cosAngle= clamp(cosAngle,0.0,1.0);
             //difuseColor = difuseColor + uMaterial.Kd/255.0*uLights[i].Id/255.0*cosAngle;
         }else{
-            toLight=vec3(uLights[i].pos);
-            toLight=normalize(toLight);
+            toLight=vec3(vec4(uLights[i].pos,0.0)*mModelView1);
         }
+        toLight = normalize(toLight);
         cosAngle = dot(normalizeFNormal,toLight);
         cosAngle= clamp(cosAngle,0.0,1.0);
         difuseColor = difuseColor + uMaterial.Kd/255.0*uLights[i].Id/255.0*cosAngle;
@@ -66,8 +67,8 @@ void main() {
     for(int i = 0; i<MAX_LIGHTS;i++){
         if(!uLights[i].isActive) continue;
         if(uLights[i].isDirectional)
-            toLight=uLights[i].pos;
-        else toLight =uLights[i].pos - vVertex;
+            toLight=vec3(vec4(uLights[i].pos,0.0)*mModelView1);
+        else toLight =vec3(vec4(uLights[i].pos,0.0)*mModelView1) - vVertex;
         toLight = normalize(toLight);
         vec3 reflection = 2.0 * dot(toLight,normalizeFNormal)*normalizeFNormal-toLight;
         reflection=normalize(reflection);
