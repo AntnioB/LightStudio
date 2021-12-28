@@ -251,7 +251,7 @@ function setup(shaders)
     lightsF.add(obj,"addLight");
     floorMat.add(obj,"syncFloor");
 
-    gl.clearColor(0.25, 0.25, 0.25, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     CUBE.init(gl);
     TORUS.init(gl);
     CYLINDER.init(gl);
@@ -338,6 +338,11 @@ function setup(shaders)
         }
     }
 
+    function isLightSource(bool){
+        let isLightuLocation= gl.getUniformLocation(program,"isLightSource");
+        gl.uniform1i(isLightuLocation,bool);
+    }
+
     function render()
     {
         if(animation) time += speed;
@@ -349,6 +354,7 @@ function setup(shaders)
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
     
+        isLightSource(false);
         loadMatrix(lookAt([camera.eye.x,camera.eye.y,camera.eye.z], [camera.at.x,camera.at.y,camera.at.z], [camera.up.x,camera.up.y,camera.up.z]));
         uploadModelView();
         pushMatrix();
@@ -357,6 +363,7 @@ function setup(shaders)
         pushMatrix();
             object();
         popMatrix();
+        isLightSource(true);
         for(let i =0;i<nLights;i++){
             pushMatrix();
             light(i);

@@ -27,8 +27,14 @@ uniform int uNLights; //Effective number of lights used
 uniform LightInfo uLights[MAX_LIGHTS]; //Array of lights present in the scene
 uniform MaterialInfo uMaterial; //Material of the object being drawn
 
+uniform bool isLightSource;
+
 void main() {
 
+    if(isLightSource){
+        gl_FragColor=vec4(1.0,1.0,1.0,1.0);
+    }
+    else{
     //Ambient
     vec3 ambientColor= vec3(0.0,0.0,0.0);
     int nLights=uNLights;
@@ -49,12 +55,8 @@ void main() {
         if(!uLights[i].isActive) continue;
         if(!uLights[i].isDirectional){
             toLight =vec3(mModelView1* vec4(uLights[i].pos,0.0)) - vVertex;
-            //toLight = normalize(toLight);
-            //cosAngle = dot(normalizeFNormal,toLight);
-            //cosAngle= clamp(cosAngle,0.0,1.0);
-            //difuseColor = difuseColor + uMaterial.Kd/255.0*uLights[i].Id/255.0*cosAngle;
         }else{
-            toLight=vec3(vec4(uLights[i].pos,0.0)*mModelView1);
+            toLight=vec3(mModelView1 * vec4(uLights[i].pos,0.0));
         }
         toLight = normalize(toLight);
         cosAngle = dot(normalizeFNormal,toLight);
@@ -67,8 +69,8 @@ void main() {
     for(int i = 0; i<MAX_LIGHTS;i++){
         if(!uLights[i].isActive) continue;
         if(uLights[i].isDirectional)
-            toLight=vec3(vec4(uLights[i].pos,0.0)*mModelView1);
-        else toLight =vec3(vec4(uLights[i].pos,0.0)*mModelView1) - vVertex;
+            toLight=vec3(mModelView1*vec4(uLights[i].pos,0.0));
+        else toLight =vec3(mModelView1*vec4(uLights[i].pos,0.0)) - vVertex;
         toLight = normalize(toLight);
         vec3 reflection = 2.0 * dot(toLight,normalizeFNormal)*normalizeFNormal-toLight;
         reflection=normalize(reflection);
@@ -83,7 +85,6 @@ void main() {
     }
 
     vec3 color = ambientColor + difuseColor + specularColor;
-    //vec3 c = fNormal + vec3(1.0, 1.0, 1.0);
-    //gl_FragColor = vec4(0.5*c+ambientColor+difuseColor, 1.0);
     gl_FragColor=vec4(color,1.0);
+    }
 }
