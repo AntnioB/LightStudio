@@ -18,8 +18,6 @@ let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 let animation = true;   // Animation is running
 let artefact=TORUS;     //Type of object to be drawn
 
-const VP_DISTANCE = 5;
-
 let camera ={
     eye:{
         x:5,
@@ -251,7 +249,7 @@ function setup(shaders)
     lightsF.add(obj,"addLight");
     floorMat.add(obj,"syncFloor");
 
-    gl.clearColor(0.25, 0.25, 0.25, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     CUBE.init(gl);
     TORUS.init(gl);
     CYLINDER.init(gl);
@@ -303,8 +301,7 @@ function setup(shaders)
         }
     }
 
-    function uploadModelView()
-    {
+    function uploadModelView(){
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelView()));
     }
 
@@ -320,9 +317,7 @@ function setup(shaders)
     }
     function object(){
         updateMaterial();
-        //multTranslation([0,0.5,0]);
         uploadModelView();
-
         artefact.draw(gl,program,mode);
     }
 
@@ -338,8 +333,12 @@ function setup(shaders)
         }
     }
 
-    function render()
-    {
+    function isLightSource(bool){
+        let isLightuLocation= gl.getUniformLocation(program,"isLightSource");
+        gl.uniform1i(isLightuLocation,bool);
+    }
+
+    function render(){
         if(animation) time += speed;
         window.requestAnimationFrame(render);
 
@@ -349,14 +348,16 @@ function setup(shaders)
         
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mProjection"), false, flatten(mProjection));
     
+        isLightSource(false);
         loadMatrix(lookAt([camera.eye.x,camera.eye.y,camera.eye.z], [camera.at.x,camera.at.y,camera.at.z], [camera.up.x,camera.up.y,camera.up.z]));
-        
+        uploadModelView();
         pushMatrix();
             floor();
         popMatrix();
         pushMatrix();
             object();
         popMatrix();
+        isLightSource(true);
         for(let i =0;i<nLights;i++){
             pushMatrix();
             light(i);
