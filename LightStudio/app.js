@@ -18,8 +18,6 @@ let mode;               // Drawing mode (gl.LINES or gl.TRIANGLES)
 let animation = true;   // Animation is running
 let artefact=TORUS;     //Type of object to be drawn
 
-const VP_DISTANCE = 5;
-
 let camera ={
     eye:{
         x:5,
@@ -303,8 +301,7 @@ function setup(shaders)
         }
     }
 
-    function uploadModelView()
-    {
+    function uploadModelView(){
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "mModelView"), false, flatten(modelView()));
     }
 
@@ -320,9 +317,7 @@ function setup(shaders)
     }
     function object(){
         updateMaterial();
-        //multTranslation([0,0.5,0]);
         uploadModelView();
-
         artefact.draw(gl,program,mode);
     }
 
@@ -343,8 +338,7 @@ function setup(shaders)
         gl.uniform1i(isLightuLocation,bool);
     }
 
-    function render()
-    {
+    function render(){
         if(animation) time += speed;
         window.requestAnimationFrame(render);
 
